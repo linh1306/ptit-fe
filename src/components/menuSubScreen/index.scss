@@ -1,0 +1,14 @@
+.menu-sub-screen {
+  div{
+    position: relative;
+  }
+
+  div:nth-child(n+2){
+    position: absolute;
+    top: 0;
+  }
+
+  &:hover div:nth-child(n+1){
+    position: relative;
+  }
+}
