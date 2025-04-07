@@ -3,6 +3,8 @@ name: Deploy to Vercel with Bun
 on:
   push:
     branches: [deploy]
+  pull_request:
+    branches: [deploy]
 
 jobs:
   deploy:
