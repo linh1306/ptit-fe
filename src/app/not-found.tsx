@@ -2,7 +2,7 @@ import React from 'react';
 import { Button, Result } from 'antd';
 import Link from 'next/link';
 
-const NotFoundPage = () => {
+export default function NotFoundPage() {
   return (
     <div className="flex justify-center items-center h-screen bg-gray-100">
       <Result
@@ -20,5 +20,4 @@ const NotFoundPage = () => {
     </div>
   );
 };
-
-export default NotFoundPage;
+export const runtime = 'edge';
