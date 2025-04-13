@@ -4,10 +4,13 @@ on:
   push:
     branches: [deploy]
   pull_request:
+    types:
+      - closed
     branches: [deploy]
 
 jobs:
   deploy:
+    if: github.event.pull_request.merged
     runs-on: ubuntu-latest
 
     steps:
@@ -22,7 +25,6 @@ jobs:
 
       - name: Create .env file
         run: |
-          echo "NEXT_PUBLIC_WEB_URL=${{ secrets.NEXT_PUBLIC_WEB_URL }}" >> .env
           echo "NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}" >> .env
           echo "NEXT_PUBLIC_SOCKET_CHAT_URL=${{ secrets.NEXT_PUBLIC_SOCKET_CHAT_URL }}" >> .env
           echo "NEXT_PUBLIC_SOCKET_NOTIFICATION_URL=${{ secrets.NEXT_PUBLIC_SOCKET_NOTIFICATION_URL }}" >> .env
