@@ -1,3 +1,3 @@
-import QuizPage from "@app/module/quiz";
+import QuizPage from "@app/module/user/quiz";
 
 export default QuizPage;

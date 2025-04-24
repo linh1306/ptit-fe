@@ -1,5 +1,3 @@
-import PostsPage from '@app/module/posts/page';
+import PostsPage from "@app/module/user/posts/page";
 
-export default function PostsRoute() {
-  return <PostsPage />;
-} 
+export default PostsPage;

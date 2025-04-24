@@ -1,3 +1,3 @@
-import LessonsPage from "@app/module/lessons/page";
+import LessonsPage from "@app/module/user/lessons/page";
 
 export default LessonsPage;

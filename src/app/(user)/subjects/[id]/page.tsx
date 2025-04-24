@@ -1,5 +1,5 @@
 'use client'
-import SubjectDetailPage from '@app/module/subjects/[id]/page';
+import SubjectDetailPage from '@app/module/user/subjects/[id]/page';
 
 interface SubjectDetailRouteProps {
   params: {
