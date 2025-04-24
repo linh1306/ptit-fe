@@ -1,4 +1,4 @@
-import Config from '@app/config';
+import { SUB_PAGE } from '@app/config/subPage';
 import { useReduxData } from "@app/hooks/useReduxData.hook";
 import { Flex } from "antd";
 
@@ -7,7 +7,7 @@ export default function SubPage() {
 
   const pages =
     menu.subPages?.map((page) => {
-      const Page = Config.SUB_PAGE[page.key];
+      const Page = SUB_PAGE[page.key];
       return <Page key={page.key} {...page.props} />;
     }) ?? [];
 

@@ -31,18 +31,6 @@ const routes = [
     permissions: ["user", "admin", "superAdmin"]
   },
   {
-    key: "/messages",
-    label: "Tin nhắn",
-    icon: <MessageOutlined />,
-    permissions: ["user", "admin", "superAdmin"]
-  },
-  {
-    key: "/profile",
-    label: "Tài khoản",
-    icon: <UserOutlined />,
-    permissions: ["user", "admin", "superAdmin"]
-  },
-  {
     key: "/admin",
     label: "Quản trị viên",
     icon: <UserOutlined />,
@@ -61,12 +49,6 @@ const menuAdminItems = [
     key: '/admin/subjects',
     icon: <BookOutlined />,
     label: 'Quản lý môn học',
-    permissions: ["admin", "superAdmin"]
-  },
-  {
-    key: '/admin/lessons',
-    icon: <ReadOutlined />,
-    label: 'Quản lý bài học',
     permissions: ["admin", "superAdmin"]
   },
   {

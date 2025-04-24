@@ -25,7 +25,7 @@ import { useDispatch } from "react-redux";
 import { logoutUser } from "@app/store/slices/UserSlice";
 import { logout } from "@app/common";
 import { useRouter } from "next/navigation";
-import Config from '@app/config';
+import Config from '@app/config/index.config';
 
 export default function PProfile() {
   const dispatch = useDispatch();

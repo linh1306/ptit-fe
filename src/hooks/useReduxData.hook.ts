@@ -1,4 +1,4 @@
-import { IRootState } from "@app/store/store";
+import { IRootState } from "@app/store";
 import { useSelector } from "react-redux";
 
 export const useReduxData = () => {
