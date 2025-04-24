@@ -1,14 +1,33 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { Table, Button, Space, Modal, Form, Input, message, Select, Card, Typography, Pagination } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
-import { PlusOutlined, EditOutlined, DeleteOutlined, FileTextOutlined, FormOutlined } from '@ant-design/icons';
-import { ILesson, TLesson } from '@app/type/schema.type';
-import subjectApi from '@app/api/subject.api';
-import useApiMutation from '@app/hooks/useApiMutation.hook';
-import usePaginationParam from '@app/hooks/usePaginationParams.hook';
-import lessonApi from '@app/api/lesson.api';
+import React, { useState } from "react";
+import {
+  Table,
+  Button,
+  Space,
+  Modal,
+  Form,
+  Input,
+  message,
+  Select,
+  Card,
+  Typography,
+  Pagination,
+} from "antd";
+import type { ColumnsType } from "antd/es/table";
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  FileTextOutlined,
+  FormOutlined,
+} from "@ant-design/icons";
+import { ILesson, TLesson } from "@app/type/schema.type";
+import subjectApi from "@app/api/subject.api";
+import usePaginationParam from "@app/hooks/usePaginationParams.hook";
+import lessonApi from "@app/api/lesson.api";
+import useAppQuery from "@app/hooks/useAppQuery.hook";
+import useAppMutation from "@app/hooks/useAppMutation.hook";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -19,89 +38,82 @@ interface SubjectLessonManagementProps {
   };
 }
 
-const SubjectLessonManagementPage = ({ params }: SubjectLessonManagementProps) => {
+const SubjectLessonManagementPage = ({
+  params,
+}: SubjectLessonManagementProps) => {
   const subjectId = params.id;
   const [form] = Form.useForm();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingLesson, setEditingLesson] = useState<ILesson | null>(null);
 
-  const { pagination, onChange: onChangePagination, setPagination } = usePaginationParam()
-  const { data: subject, mutate: getSubjectById, isLoading: isLoadingSubject } = useApiMutation(
+  const {
+    pagination,
+    paginationQuery,
+    onChangePagination,
+    setPagination,
+  } = usePaginationParam();
+  const { data: subject, isLoading: isLoadingSubject } = useAppQuery(
     subjectApi.getSubjectById,
     {
-      setQueryData: {
-        queryKey: ["subjects", subjectId]
-      }
-    }
-  );
-  const { data: lessons, mutate: getLessons, isLoading: isLoadingLessons } = useApiMutation(
-    subjectApi.getLessons,
-    {
-      onSuccess: (data) => {
-        setPagination(data.metadata ?? pagination);
+      queryKey: ["subjects", subjectId],
+      variables: {
+        pathIds: [subjectId],
       },
-      setQueryData: {
-        queryKey: ["subjects", subjectId, "lessons"]
-      }
     }
   );
+  const {
+    data: lessons,
+    refetch,
+    isLoading: isLoadingLessons,
+  } = useAppQuery(subjectApi.getLessons, {
+    queryKey: ["subjects", subjectId, "lessons"],
+    variables: {
+      pathIds: [subjectId],
+      pagination: paginationQuery,
+    },
+    onSuccess: (data) => {
+      setPagination(data.metadata ?? pagination);
+    },
+  });
 
-  // Tạo bài học mới
-  const { mutate: createLesson } = useApiMutation(
-    subjectApi.createLesson,
-    {
-      onSuccess: () => {
-        message.success('Tạo bài học thành công');
-        getLessons({ pathIds: [subjectId] });
-        setIsModalVisible(false);
-        form.resetFields();
-      }
-    }
-  );
+  const { mutate: createLesson } = useAppMutation(subjectApi.createLesson, {
+    onSuccess: () => {
+      message.success("Tạo bài học thành công");
+      refetch();
+      setIsModalVisible(false);
+      form.resetFields();
+    },
+  });
 
   // Cập nhật bài học
-  const { mutate: updateLesson } = useApiMutation(
-    lessonApi.updateLesson,
-    {
-      onSuccess: () => {
-        message.success('Cập nhật bài học thành công');
-        getLessons({ pathIds: [subjectId] });
-        setIsModalVisible(false);
-        setEditingLesson(null);
-        form.resetFields();
-      }
-    }
-  );
+  const { mutate: updateLesson } = useAppMutation(lessonApi.updateLesson, {
+    onSuccess: () => {
+      message.success("Cập nhật bài học thành công");
+      refetch();
+      setIsModalVisible(false);
+      setEditingLesson(null);
+      form.resetFields();
+    },
+  });
 
   // Xóa bài học
-  const { mutate: deleteLesson } = useApiMutation(
-    lessonApi.deleteLesson,
-    {
-      onSuccess: () => {
-        message.success('Xóa bài học thành công');
-        getLessons({ pathIds: [subjectId] });
-      }
-    }
-  );
-
-  useEffect(() => {
-    if (subjectId) {
-      getSubjectById({ pathIds: [subjectId] });
-      getLessons({ pathIds: [subjectId] });
-    }
-  }, [subjectId]);
+  const { mutate: deleteLesson } = useAppMutation(lessonApi.deleteLesson, {
+    onSuccess: () => {
+      message.success("Xóa bài học thành công");
+      refetch();
+    },
+  });
 
   const handleDelete = (lessonId: string) => {
     Modal.confirm({
-      title: 'Xác nhận xóa bài học',
-      content: 'Bạn có chắc chắn muốn xóa bài học này không?',
-      okText: 'Xóa',
-      okType: 'danger',
-      cancelText: 'Hủy',
+      title: "Xác nhận xóa bài học",
+      content: "Bạn có chắc chắn muốn xóa bài học này không?",
+      okText: "Xóa",
+      okType: "danger",
+      cancelText: "Hủy",
       onOk: () => {
-        deleteLesson({ pathIds: [ lessonId] })
-        getLessons({ pathIds: [subjectId] });
-      }
+        deleteLesson({ pathIds: [lessonId] });
+      },
     });
   };
 
@@ -116,7 +128,7 @@ const SubjectLessonManagementPage = ({ params }: SubjectLessonManagementProps) =
   const getLessonTypeText = (type: TLesson) => {
     const types: { [key in TLesson]: string } = {
       document: "Tài liệu",
-      multiple_choice: "Trắc nghiệm"
+      multiple_choice: "Trắc nghiệm",
     };
     return types[type] || type;
   };
@@ -124,9 +136,9 @@ const SubjectLessonManagementPage = ({ params }: SubjectLessonManagementProps) =
   const getLessonIcon = (type: TLesson) => {
     switch (type) {
       case "document":
-        return <FileTextOutlined style={{ color: '#1890ff' }} />;
+        return <FileTextOutlined style={{ color: "#1890ff" }} />;
       case "multiple_choice":
-        return <FormOutlined style={{ color: '#fa8c16' }} />;
+        return <FormOutlined style={{ color: "#fa8c16" }} />;
       default:
         return <FileTextOutlined />;
     }
@@ -135,15 +147,15 @@ const SubjectLessonManagementPage = ({ params }: SubjectLessonManagementProps) =
   const columns: ColumnsType<ILesson> = [
     {
       title: "STT",
-      dataIndex: 'id',
-      key: 'id',
+      dataIndex: "id",
+      key: "id",
       width: 80,
       render: (_, __, index) => index + 1,
     },
     {
-      title: 'Tên bài học',
-      dataIndex: 'name',
-      key: 'name',
+      title: "Tên bài học",
+      dataIndex: "name",
+      key: "name",
       render: (text, record) => (
         <div className="flex items-center">
           {getLessonIcon(record.type)}
@@ -152,15 +164,15 @@ const SubjectLessonManagementPage = ({ params }: SubjectLessonManagementProps) =
       ),
     },
     {
-      title: 'Loại bài học',
-      dataIndex: 'type',
-      key: 'type',
+      title: "Loại bài học",
+      dataIndex: "type",
+      key: "type",
       width: 150,
       render: (type) => getLessonTypeText(type as TLesson),
     },
     {
-      title: 'Thao tác',
-      key: 'action',
+      title: "Thao tác",
+      key: "action",
       width: 200,
       render: (_, record) => (
         <Space size="middle">
@@ -188,10 +200,6 @@ const SubjectLessonManagementPage = ({ params }: SubjectLessonManagementProps) =
   ];
 
   const isLoading = isLoadingSubject || isLoadingLessons;
-
-  useEffect(() => {
-    getLessons({ pathIds: [subjectId], pagination });
-  }, [pagination.page, pagination.pageSize]);
 
   return (
     <div className="p-6">
@@ -228,7 +236,7 @@ const SubjectLessonManagementPage = ({ params }: SubjectLessonManagementProps) =
       </Card>
 
       <Modal
-        title={editingLesson ? 'Sửa bài học' : 'Thêm bài học mới'}
+        title={editingLesson ? "Sửa bài học" : "Thêm bài học mới"}
         open={isModalVisible}
         onCancel={() => {
           setIsModalVisible(false);
@@ -241,7 +249,7 @@ const SubjectLessonManagementPage = ({ params }: SubjectLessonManagementProps) =
           <Form.Item
             name="name"
             label="Tên bài học"
-            rules={[{ required: true, message: 'Vui lòng nhập tên bài học' }]}
+            rules={[{ required: true, message: "Vui lòng nhập tên bài học" }]}
           >
             <Input />
           </Form.Item>
@@ -250,7 +258,9 @@ const SubjectLessonManagementPage = ({ params }: SubjectLessonManagementProps) =
             <Form.Item
               name="type"
               label="Loại bài học"
-              rules={[{ required: true, message: 'Vui lòng chọn loại bài học' }]}
+              rules={[
+                { required: true, message: "Vui lòng chọn loại bài học" },
+              ]}
             >
               <Select placeholder="Chọn loại bài học">
                 <Option value="document">Tài liệu</Option>
@@ -261,11 +271,9 @@ const SubjectLessonManagementPage = ({ params }: SubjectLessonManagementProps) =
 
           <Form.Item className="mb-0">
             <div className="flex justify-end gap-2">
-              <Button onClick={() => setIsModalVisible(false)}>
-                Hủy
-              </Button>
+              <Button onClick={() => setIsModalVisible(false)}>Hủy</Button>
               <Button type="primary" htmlType="submit">
-                {editingLesson ? 'Cập nhật' : 'Thêm mới'}
+                {editingLesson ? "Cập nhật" : "Thêm mới"}
               </Button>
             </div>
           </Form.Item>

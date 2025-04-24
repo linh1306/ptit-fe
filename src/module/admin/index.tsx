@@ -8,7 +8,6 @@ import {
   Tag,
   Button,
   Typography,
-  Spin,
   Alert,
   Space,
   Tabs,
@@ -21,6 +20,7 @@ import {
   WarningOutlined,
   InfoCircleOutlined
 } from '@ant-design/icons';
+import { Loading } from '@app/components/loading';
 const { Title } = Typography;
 const { TabPane } = Tabs;
 
@@ -120,11 +120,7 @@ const DashboardPage = () => {
   ];
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <Spin size="large" tip="Loading Dashboard..." />
-      </div>
-    );
+    return <Loading />;
   }
 
   return (

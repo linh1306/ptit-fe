@@ -4,45 +4,40 @@ import { Avatar, Flex, Input } from "antd";
 import { SendOutlined } from "@ant-design/icons";
 import { timeDisplay } from "@app/common";
 import LayoutSubPage from "@app/components/layout/LayoutSubPage";
-import { useCallback, useEffect, useState } from "react";
-import { useSocketChat } from "@app/hooks/useSocket.hook";
+import { useCallback, useState } from "react";
 import { useSelector } from "react-redux";
-import { IRootState } from "@app/store/store";
+import { IRootState } from "@app/store";
 import { IMessage } from "@app/type/schema.type";
 import groupChatApi from "@app/api/groupChat.api";
-import useApiMutation from "@app/hooks/useApiMutation.hook";
+import useAppQuery from "@app/hooks/useAppQuery.hook";
+import usePaginationParam from "@app/hooks/usePaginationParams.hook";
+import { useAppSocket } from "@app/hooks/useAppSocket.hook";
 
 export default function PChatSubScreen(props: any) {
   const { user } = useSelector((state: IRootState) => state.user);
   const groupChatId = props.id;
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
+  const { paginationQuery } = usePaginationParam();
 
-  const { mutate: getMessages } = useApiMutation(groupChatApi.getMessages, {
-    onSuccess: (data) => setMessages(data.data),
-    setQueryData: {
-      queryKey: ["messages"]
-    }
+  const { refetch } = useAppQuery(groupChatApi.getMessages, {
+    queryKey: ["messages"],
+    variables: { pathIds: [groupChatId], pagination: paginationQuery },
+    onSuccess: (data) => {
+      setMessages(data.data);
+    },
   });
-
-  useEffect(() => {
-    if (groupChatId) {
-      getMessages({
-        body: {
-          groupChatId
-        }
-      });
-    };
-  }, [groupChatId]);
 
   const handleReceiveMessage = useCallback((data: IMessage) => {
     setMessages((prev) => [...prev, data]);
     setInputMessage("");
   }, []);
 
-  const { isConnected, sendMessage } = useSocketChat({
-    key: 'CHAT',
-    onReceiveMessage: handleReceiveMessage,
+  const { isConnected, sendMessage } = useAppSocket({
+    key: "CHAT",
+    onEvents: {
+      receiveMessage: handleReceiveMessage,
+    },
   });
 
   const handleSendMessage = () => {
@@ -50,25 +45,22 @@ export default function PChatSubScreen(props: any) {
 
     sendMessage({
       content: inputMessage,
-      groupChatId: groupChatId
+      groupChatId: groupChatId,
     });
   };
 
-  const shouldShowSenderName = (currentMessage: IMessage, index: number) => {
-    // Không hiển thị tên nếu là tin nhắn của chính mình
-    if (currentMessage.senderId === user?.id) return false;
+  const getAlign = (index: number, position: "top" | "bottom") => {
+    if (!messages[index]) return false;
 
-    // Nếu là tin nhắn đầu tiên hoặc người gửi khác với tin nhắn trước đó
-    if (index === 0 || currentMessage.senderId !== messages[index - 1]?.senderId) {
-      return true;
-    }
+    const currentSender = messages[index].senderId;
+    const compareIndex = position === "top" ? index - 1 : index + 1;
+    const compareSender = messages[compareIndex]?.senderId;
 
-    return false;
+    return currentSender === compareSender;
   };
-
   return (
     <LayoutSubPage header={<h1>Chat</h1>}>
-      <Flex vertical className="w-full h-full" gap={10}>
+      <Flex vertical className="w-full h-full" justify="end" gap={10}>
         {/* Phần hiển thị tin nhắn */}
         <Flex
           vertical
@@ -76,48 +68,64 @@ export default function PChatSubScreen(props: any) {
           justify="end"
           gap={3}
         >
-          {messages.map((item, index) => (
-            <Flex
-              vertical
-              className="transition-all"
-              key={item.id}
-              align={item.senderId === user?.id ? "end" : "start"}
-              justify="start"
-            >
-              {shouldShowSenderName(item, index) && (
-                <p className="text-[10px] px-3 text-gray-600">
-                  {item.sender?.name}
-                </p>
-              )}
+          {messages.map((mes, index) => (
+            <div key={mes.id}>
               <Flex
-                gap={3}
-                className="w-full"
-                justify={item.senderId === user?.id ? "end" : "start"}
-                align="end"
+                data-aos="fade-down"
+                data-aos-delay={(messages.length - index) * 100}
+                vertical
+                className="transition-all"
+                key={mes.id}
+                align={mes.senderId === user?.id ? "end" : "start"}
+                justify="start"
               >
-                <div className="aspect-square w-8">
-                  {!shouldShowSenderName(item, index) ? null : (
-                    <Avatar src={item.sender?.urlImage ?? '/avatar.jpg'} />
-                  )}
-                </div>
-                <Flex vertical className="group max-w-[75%]" tabIndex={0}>
-                  <p
-                    className={`group-focus:block hidden text-[10px] px-3 ${item.senderId === user?.id ? "text-end" : "text-start"
-                      }`}
-                  >
-                    {timeDisplay(new Date(item.createdAt))}
+                {!getAlign(index, "top") && mes.senderId !== user?.id && (
+                  <p className="text-[10px] font-semibold px-9 text-gray-600">
+                    {mes.sender?.name}
                   </p>
-                  <Flex
-                    className={`rounded-2xl px-2 py-1 ${item.senderId === user?.id
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-200 text-black"
+                )}
+                <Flex
+                  gap={3}
+                  className="w-full"
+                  justify={mes.senderId === user?.id ? "end" : "start"}
+                  align="start"
+                >
+                  <div className="aspect-square w-8">
+                    {!getAlign(index, "top") && mes.senderId !== user?.id && (
+                      <Avatar src={mes.sender?.urlImage ?? "/avatar.jpg"} />
+                    )}
+                  </div>
+                  <Flex vertical className="group max-w-[75%]" tabIndex={0}>
+                    <Flex
+                      className={`rounded-xl px-2 py-1 min-w-[100px] ${
+                        getAlign(index, "top") &&
+                        (mes.senderId === user?.id
+                          ? "rounded-tr-md"
+                          : "rounded-tl-md")
+                      } ${
+                        getAlign(index, "bottom") &&
+                        (mes.senderId === user?.id
+                          ? "rounded-br-md"
+                          : "rounded-bl-md")
+                      } ${
+                        mes.senderId === user?.id
+                          ? "bg-blue-500 text-white"
+                          : "bg-gray-200 text-black"
                       }`}
-                  >
-                    <p>{item.content}</p>
+                    >
+                      <p>{mes.content}</p>
+                    </Flex>
+                    <p
+                      className={`group-focus:block hidden text-[10px] font-semibold ${
+                        mes.senderId === user?.id ? "text-end" : "text-start"
+                      }`}
+                    >
+                      {timeDisplay(new Date(mes.createdAt))}
+                    </p>
                   </Flex>
                 </Flex>
               </Flex>
-            </Flex>
+            </div>
           ))}
         </Flex>
 
@@ -127,7 +135,11 @@ export default function PChatSubScreen(props: any) {
           suffix={
             <SendOutlined
               onClick={handleSendMessage}
-              className={isConnected && inputMessage.trim() ? "cursor-pointer text-blue-500" : "text-gray-400"}
+              className={
+                isConnected && inputMessage.trim()
+                  ? "cursor-pointer text-blue-500"
+                  : "text-gray-400"
+              }
             />
           }
           value={inputMessage}

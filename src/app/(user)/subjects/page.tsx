@@ -1,5 +1,3 @@
-import SubjectsPage from '@app/module/subjects/page';
+import SubjectsPage from '@app/module/user/subjects/page';
 
-export default function SubjectsRoute() {
-  return <SubjectsPage />;
-} 
+export default SubjectsPage;

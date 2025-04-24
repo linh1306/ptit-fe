@@ -1,15 +1,15 @@
 import { IUser } from "@app/type/schema.type";
 import { createFetcher } from ".";
 
-type ISignInBody = Pick<IUser, "email" | "password">;
+export type ISignInBody = Pick<IUser, "email" | "password">;
 
-interface ISignInRes {
+export interface ISignInRes {
   token: string;
 }
 
-type ISignUpBody = Pick<IUser, "code" | "email" | "name" | "date_of_birth" | "course" | "password">;
+export type ISignUpBody = Pick<IUser, "code" | "email" | "name" | "date_of_birth" | "course" | "password">;
 
-interface ISignUpRes {
+export interface ISignUpRes {
   success: boolean;
 }
 

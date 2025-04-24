@@ -7,6 +7,14 @@
   --foreground: #171717;
 }
 
+.block-style {
+  @apply border border-slate-50 bg-slate-50 shadow-md rounded-lg;
+}
+
+.ant-form-item-label{
+  @apply !p-0;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
